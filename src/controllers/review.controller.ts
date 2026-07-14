@@ -1,7 +1,6 @@
+// controllers/reviewController.ts
 import type { Response } from "express";
 import mongoose from "mongoose";
-
-
 import type { AuthenticatedRequest } from "../middleware/authMiddleware.js";
 import { requireUserId } from "../utils/requireUserId.js";
 import { HelpRequest } from "../model/HelpRequest.js";
@@ -60,8 +59,14 @@ export async function createReview(
       reviewer: userId,
       reviewee: helpRequest.helper,
       rating,
-      comment,
+      comment: comment || "",
     });
+
+    // Push the review ID to the HelpRequest's reviews array
+    await HelpRequest.findByIdAndUpdate(
+      helpRequest._id,
+      { $push: { reviews: review._id } }
+    );
 
     const stats = await Review.aggregate([
       { $match: { reviewee: new mongoose.Types.ObjectId(helpRequest.helper.toString()) } },
@@ -100,8 +105,26 @@ export async function getReviewsForUser(
     const { userId } = req.params;
 
     const reviews = await Review.find({ reviewee: userId })
-      .populate("reviewer", "name image")
+      .populate("reviewer", "name image avatarUrl")
       .populate("request", "title category")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch reviews", error: (error as Error).message });
+  }
+}
+
+export async function getReviewsByRequestId(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const { requestId } = req.params;
+
+    const reviews = await Review.find({ request: requestId })
+      .populate("reviewer", "name avatarUrl role")
+      .populate("reviewee", "name avatarUrl")
       .sort({ createdAt: -1 });
 
     res.status(200).json(reviews);

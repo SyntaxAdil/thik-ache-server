@@ -1,3 +1,4 @@
+// controllers/helpRequestController.ts
 import type { Response } from "express";
 import mongoose, { type QueryFilter } from "mongoose";
 
@@ -49,14 +50,18 @@ export async function createHelpRequest(
       shortDescription,
       fullDescription,
       category,
-      areaLabel,
-      location: { type: "Point", coordinates },
+      location: { 
+        type: "Point", 
+        coordinates,
+      },
+      areaLabel, // Separate field
       budget,
       isPaid: Boolean(isPaid),
       preferredTime,
       imageUrl,
       postedBy: userId,
       status: "open",
+      reviews: [],
     });
 
     res.status(201).json(helpRequest);
@@ -81,7 +86,7 @@ export async function getHelpRequests(
     }
 
     if (category) filter.category = category as IHelpRequest["category"];
-    if (area) filter.areaLabel = area as string;
+    if (area) filter.areaLabel = area as string; // Use areaLabel directly
     if (search) filter.$text = { $search: search as string };
 
     const pageNum = Math.max(parseInt(page as string, 10) || 1, 1);
@@ -125,7 +130,14 @@ export async function getHelpRequestById(
 
     const helpRequest = await HelpRequest.findById(id)
       .populate("postedBy", "name image area avgRating completedCount")
-      .populate("helper", "name image area avgRating completedCount");
+      .populate("helper", "name image area avgRating completedCount")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "reviewer",
+          select: "name avatarUrl role"
+        }
+      });
 
     if (!helpRequest) {
       res.status(404).json({ message: "Request not found" });
