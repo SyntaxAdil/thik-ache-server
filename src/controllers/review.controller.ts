@@ -354,3 +354,24 @@ export async function hasUserReviewed(
     });
   }
 }
+
+// controllers/reviewController.ts - Add this function at the end
+export async function getAllReviews(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const reviews = await Review.find()
+      .populate("reviewer", "name email avatarUrl")
+      .populate("reviewee", "name email avatarUrl")
+      .populate("request", "title category")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch all reviews",
+      error: (error as Error).message,
+    });
+  }
+}
