@@ -1,12 +1,13 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types, type Model } from "mongoose";
 
-export interface IReview extends Document {
+export interface IReview {
   request: Types.ObjectId;
   reviewer: Types.ObjectId;
   reviewee: Types.ObjectId;
   rating: number;
   comment: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 const ReviewSchema = new Schema<IReview>(
@@ -22,5 +23,6 @@ const ReviewSchema = new Schema<IReview>(
 
 ReviewSchema.index({ request: 1, reviewer: 1 }, { unique: true });
 
-export const Review =
-  mongoose.models.Review || mongoose.model<IReview>("Review", ReviewSchema);
+export const Review: Model<IReview> =
+  (mongoose.models.Review as Model<IReview>) ||
+  mongoose.model<IReview>("Review", ReviewSchema);

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types, type Model } from "mongoose";
 
 export type RequestStatus =
   | "open"
@@ -14,7 +14,7 @@ export type RequestCategory =
   | "repair"
   | "other";
 
-export interface IHelpRequest extends Document {
+export interface IHelpRequest {
   title: string;
   shortDescription: string;
   fullDescription: string;
@@ -70,6 +70,6 @@ HelpRequestSchema.index({ location: "2dsphere" });
 HelpRequestSchema.index({ title: "text", shortDescription: "text" });
 HelpRequestSchema.index({ status: 1, category: 1, areaLabel: 1 });
 
-export const HelpRequest =
-  mongoose.models.HelpRequest ||
+export const HelpRequest: Model<IHelpRequest> =
+  (mongoose.models.HelpRequest as Model<IHelpRequest>) ||
   mongoose.model<IHelpRequest>("HelpRequest", HelpRequestSchema);

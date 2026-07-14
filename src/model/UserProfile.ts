@@ -1,6 +1,6 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, type Model } from "mongoose";
 
-export interface IUserProfile extends Document {
+export interface IUserProfile {
   name: string;
   email: string;
   role: "user" | "admin";
@@ -21,6 +21,6 @@ const UserProfileSchema = new Schema<IUserProfile>(
   { collection: "user", strict: false }
 );
 
-export const UserProfile =
-  mongoose.models.UserProfile ||
+export const UserProfile: Model<IUserProfile> =
+  (mongoose.models.UserProfile as Model<IUserProfile>) ||
   mongoose.model<IUserProfile>("UserProfile", UserProfileSchema);
