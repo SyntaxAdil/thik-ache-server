@@ -12,9 +12,13 @@ export const connectDB = async (): Promise<void> => {
       throw new Error("MONGODB_URI environment variable is missing");
     }
 
-    await mongoose.connect(process.env.MONGODB_URI);
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      dbName: "thikache", 
+    });
+
     isConnected = true;
-    console.log("MongoDB connected");
+    console.log("MongoDB connected to database: thikache");
   } catch (err) {
     const error = err as Error;
     console.error("MongoDB connection failed:", error.message);

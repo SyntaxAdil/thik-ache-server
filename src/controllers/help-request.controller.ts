@@ -363,6 +363,7 @@ export async function getMyPostedRequests(
     const filter: HelpRequestFilter = { postedBy: userId };
 
     const requests = await HelpRequest.find(filter)
+      .populate("postedBy", "name image avgRating") 
       .populate("helper", "name image avgRating")
       .sort({ createdAt: -1 });
 
