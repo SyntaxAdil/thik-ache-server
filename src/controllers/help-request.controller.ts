@@ -123,7 +123,7 @@ export async function getHelpRequests(
 
     const [items, total] = await Promise.all([
       HelpRequest.find(filter)
-        .populate("postedBy", "name image area avgRating")
+        .populate("postedBy", "name image area avgRating phoneNumber")
         .sort(sortQuery)
         .skip(skip)
         .limit(limitNum),
@@ -153,8 +153,8 @@ export async function getHelpRequestById(
     if (!id) return;
 
     const helpRequest = await HelpRequest.findById(id)
-      .populate("postedBy", "name image area avgRating completedCount")
-      .populate("helper", "name image area avgRating completedCount")
+      .populate("postedBy", "name image area avgRating completedCount phoneNumber")
+      .populate("helper", "name image area avgRating completedCount phoneNumber")
       .populate({
         path: "reviews",
         populate: {
@@ -399,8 +399,8 @@ export async function getMyPostedRequests(
     const filter: HelpRequestFilter = { postedBy: userId };
 
     const requests = await HelpRequest.find(filter)
-      .populate("postedBy", "name image avgRating") 
-      .populate("helper", "name image avgRating")
+      .populate("postedBy", "name image avgRating phoneNumber")
+      .populate("helper", "name image avgRating phoneNumber")
       .sort({ createdAt: -1 });
 
     res.status(200).json(requests);
@@ -420,7 +420,7 @@ export async function getMyHelpingRequests(
     const filter: HelpRequestFilter = { helper: userId };
 
     const requests = await HelpRequest.find(filter)
-      .populate("postedBy", "name image avgRating")
+      .populate("postedBy", "name image avgRating phoneNumber")
       .sort({ createdAt: -1 });
 
     res.status(200).json(requests);

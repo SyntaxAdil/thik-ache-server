@@ -7,6 +7,8 @@ export interface IUserProfile {
   area?: string;
   avgRating: number;
   completedCount: number;
+  phoneNumber: string;
+  image?: string;
 }
 
 const UserProfileSchema = new Schema<IUserProfile>(
@@ -17,6 +19,8 @@ const UserProfileSchema = new Schema<IUserProfile>(
     area: String,
     avgRating: { type: Number, default: 0 },
     completedCount: { type: Number, default: 0 },
+    phoneNumber: String,
+    image: String,
   },
   { collection: "user", strict: false }
 );
