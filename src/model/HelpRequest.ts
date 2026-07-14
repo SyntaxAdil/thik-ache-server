@@ -10,7 +10,7 @@ export interface IHelpRequest {
     type?: string;
     coordinates?: [number, number];
   };
-  areaLabel: string; // This is a separate field
+  areaLabel: string;
   budget?: number;
   isPaid: boolean;
   preferredTime?: string;
@@ -21,6 +21,7 @@ export interface IHelpRequest {
   helper?: Types.ObjectId;
   reviews: Types.ObjectId[];
 }
+
 export const CATEGORY_OPTIONS = [
   "plumbing",
   "electrical",
@@ -41,6 +42,7 @@ export const CATEGORY_OPTIONS = [
   "fitness_coaching",
   "other",
 ] as const;
+
 const HelpRequestSchema = new Schema<IHelpRequest>(
   {
     title: { type: String, required: true },
@@ -51,7 +53,7 @@ const HelpRequestSchema = new Schema<IHelpRequest>(
       type: { type: String, enum: ["Point"], default: "Point" },
       coordinates: { type: [Number], required: true },
     },
-    areaLabel: { type: String, required: true }, // Separate field
+    areaLabel: { type: String, required: true },
     budget: { type: Number },
     isPaid: { type: Boolean, default: false },
     preferredTime: { type: String },

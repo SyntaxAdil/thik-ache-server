@@ -4,7 +4,7 @@ import mongoose, { type QueryFilter } from "mongoose";
 
 import type { AuthenticatedRequest } from "../middleware/authMiddleware.js";
 import { requireUserId } from "../utils/requireUserId.js";
-import { HelpRequest, type IHelpRequest } from "../model/HelpRequest.js";
+import { HelpRequest, type IHelpRequest, CATEGORY_OPTIONS } from "../model/HelpRequest.js";
 
 type HelpRequestFilter = QueryFilter<IHelpRequest>;
 
@@ -18,6 +18,7 @@ function getValidId(
   }
   return id;
 }
+
 
 export async function createHelpRequest(
   req: AuthenticatedRequest,
@@ -45,20 +46,42 @@ export async function createHelpRequest(
       return;
     }
 
+    // Validate category is in the enum
+    const validCategories = [
+      "plumbing", "electrical", "carpentry", "painting", "cleaning",
+      "tech_support", "web_dev", "graphics_design", "data_entry",
+      "delivery", "grocery_shopping", "moving_help", "tutoring",
+      "language_translation", "pet_care", "medical_escort",
+      "fitness_coaching", "other"
+    ];
+    
+    if (!validCategories.includes(category)) {
+      res.status(400).json({ 
+        message: `Invalid category. Must be one of: ${validCategories.join(", ")}` 
+      });
+      return;
+    }
+
+    // Validate coordinates
+    if (!Array.isArray(coordinates) || coordinates.length !== 2) {
+      res.status(400).json({ message: "Invalid coordinates format" });
+      return;
+    }
+
     const helpRequest = await HelpRequest.create({
-      title,
-      shortDescription,
-      fullDescription,
+      title: title.trim(),
+      shortDescription: shortDescription.trim(),
+      fullDescription: fullDescription.trim(),
       category,
       location: { 
         type: "Point", 
         coordinates,
       },
-      areaLabel, // Separate field
-      budget,
+      areaLabel,
+      budget: isPaid ? (budget || 0) : undefined,
       isPaid: Boolean(isPaid),
-      preferredTime,
-      imageUrl,
+      preferredTime: preferredTime || undefined,
+      imageUrl: imageUrl || undefined,
       postedBy: userId,
       status: "open",
       reviews: [],
@@ -66,6 +89,7 @@ export async function createHelpRequest(
 
     res.status(201).json(helpRequest);
   } catch (error) {
+    console.error("Create help request error:", error);
     res.status(500).json({ message: "Failed to create request", error: (error as Error).message });
   }
 }
