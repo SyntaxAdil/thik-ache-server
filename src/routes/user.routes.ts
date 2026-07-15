@@ -11,9 +11,11 @@ import {
 
 const router = Router();
 
+// 🔓 PUBLIC - No auth required
+router.get("/", getAllUsers);  
+router.get("/:id", getUserProfile); 
+
 router.get("/me/activity", authMiddleware, getMyActivity);
-router.get("/:id", getUserProfile);
-router.get("/", authMiddleware, getAllUsers);
 router.delete("/:id", authMiddleware, deleteUser);
 router.patch("/:id/role", authMiddleware, updateUserRole);
 
