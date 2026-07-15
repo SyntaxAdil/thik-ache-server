@@ -68,6 +68,22 @@ export async function createHelpRequest(
       return;
     }
 
+    // Check if user has phone number
+    const UserProfile = (await import("../model/UserProfile.js")).UserProfile;
+    const user = await UserProfile.findById(userId).select("phoneNumber");
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    if (!user.phoneNumber || user.phoneNumber.trim() === "") {
+      res.status(400).json({ 
+        message: "Please add your phone number to your profile before posting a request" 
+      });
+      return;
+    }
+
     const helpRequest = await HelpRequest.create({
       title: title.trim(),
       shortDescription: shortDescription.trim(),
