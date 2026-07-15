@@ -110,39 +110,83 @@ export async function createHelpRequest(
   }
 }
 
+// controllers/helpRequestController.ts - Updated getHelpRequests
+
 export async function getHelpRequests(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
   try {
-    const { search, category, area, status, sort = "newest", page = "1", limit = "12" } = req.query;
+    const {
+      search,
+      category,
+      area,
+      status,
+      sort = "newest",
+      page = "1",
+      limit = "12",
+    } = req.query;
 
     const filter: HelpRequestFilter = {};
 
+    // Status filter
     if (status) {
-      filter.status = status as IHelpRequest["status"];
+      const statusStr = status as string;
+      // Check if it's a comma-separated list
+      if (statusStr.includes(",")) {
+        const statuses = statusStr.split(",");
+        filter.status = { $in: statuses as IHelpRequest["status"][] };
+      } else {
+        filter.status = statusStr as IHelpRequest["status"];
+      }
     } else {
       filter.status = { $in: ["open", "matched"] };
     }
 
+    // Category filter
     if (category) filter.category = category as IHelpRequest["category"];
-    if (area) filter.areaLabel = area as string; // Use areaLabel directly
-    if (search) filter.$text = { $search: search as string };
+
+    // Area filter (case-insensitive partial match)
+    if (area) {
+      filter.areaLabel = { $regex: area as string, $options: "i" } as any;
+    }
+
+    // Search filter
+    if (search) {
+      filter.$text = { $search: search as string };
+    }
 
     const pageNum = Math.max(parseInt(page as string, 10) || 1, 1);
     const limitNum = Math.max(parseInt(limit as string, 10) || 12, 1);
     const skip = (pageNum - 1) * limitNum;
 
+    // Sort handling
     let sortQuery: Record<string, 1 | -1> = { createdAt: -1 };
-    if (sort === "urgent") sortQuery = { preferredTime: 1 };
-    if (sort === "oldest") sortQuery = { createdAt: 1 };
+
+    switch (sort) {
+      case "newest":
+        sortQuery = { createdAt: -1 };
+        break;
+      case "oldest":
+        sortQuery = { createdAt: 1 };
+        break;
+      case "budget_high":
+        sortQuery = { budget: -1 };
+        break;
+      case "budget_low":
+        sortQuery = { budget: 1 };
+        break;
+      default:
+        sortQuery = { createdAt: -1 };
+    }
 
     const [items, total] = await Promise.all([
       HelpRequest.find(filter)
         .populate("postedBy", "name image area avgRating phoneNumber")
         .sort(sortQuery)
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),
       HelpRequest.countDocuments(filter),
     ]);
 
@@ -156,6 +200,7 @@ export async function getHelpRequests(
       },
     });
   } catch (error) {
+    console.error("Get help requests error:", error);
     res.status(500).json({ message: "Failed to fetch requests", error: (error as Error).message });
   }
 }
